@@ -22,6 +22,7 @@ library(sf)
 library(leaflet)
 library(DT)
 
+
 #-------------------- Colores ---------------------
 
 color_positivos <- 'blue'
@@ -31,15 +32,15 @@ color_fallecidos <- 'purple'
 
 color_nuevos_positivos <- 'red'
 
-color_hospitalizados <- 'yellow'
+color_hospitalizados <- 'pink'
 color_salon <- 'maroon'
 color_uci <- 'teal'
 
 #--------------------- Íconos ---------------------
 
-icono_positivos <- 'fas fa-user-md'
-icono_activos <- 'fas fa-user-md'
-icono_recuperados <- 'fas fa-user-md'
+icono_positivos <- 'fas fa-user-check'
+icono_activos <- 'fas fa-user-circle'
+icono_recuperados <- 'fas fa-user-minus'
 icono_fallecidos <- 'fas fa-user-md'
 
 icono_nuevos_positivos <- 'fas fa-users'
@@ -51,7 +52,7 @@ icono_uci <- 'fa-procedures'
 icono_mujeres <- 'fas fa-female'
 icono_hombres <- 'fas fa-male' 
 icono_menor <- 'fas fa-child'
-icono_adultom <- 'fas fa-blind'
+icono_adultom <- 'fas fa-wheelchair'
 #--------------- Otros parámetros -----------------
 # Separador para lectura de datos CSV
 caracter_separador <- ','
