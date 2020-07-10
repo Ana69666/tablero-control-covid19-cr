@@ -20,7 +20,7 @@ library(dplyr)
 library(tidyr)
 library(sf)
 library(leaflet)
-library(DT)
+
 
 
 #-------------------- Colores ---------------------
@@ -59,12 +59,18 @@ caracter_separador <- ','
 
 
 #--------------- Archivos de datos ----------------
-archivo_general_pais <- 'https://raw.githubusercontent.com/geoprocesamiento-2020i/datos/master/covid19/ms/06_29_CSV_GENERAL.csv'
+
+archivo_general_pais <- 'https://raw.githubusercontent.com/geoprocesamiento-2020i/datos/master/covid19/ms/07_02_CSV_GENERAL.csv'
  
-archivo_positivos_cantones <- 'https://raw.githubusercontent.com/geoprocesamiento-2020i/datos/master/covid19/ms/06_29_CSV_POSITIVOS.csv'
-archivo_activos_cantones <- 'https://raw.githubusercontent.com/geoprocesamiento-2020i/datos/master/covid19/ms/06_29_CSV_ACTIVOS.csv'
-archivo_recuperados_cantones <- 'https://raw.githubusercontent.com/geoprocesamiento-2020i/datos/master/covid19/ms/06_29_CSV_RECUP.csv'
-archivo_fallecidos_cantones <- 'https://raw.githubusercontent.com/geoprocesamiento-2020i/datos/master/covid19/ms/06_29_CSV_FALLECIDOS.csv'
+archivo_positivos_cantones <- 'https://raw.githubusercontent.com/geoprocesamiento-2020i/datos/master/covid19/ms/07_02_CSV_POSITIVOS.csv'
+
+archivo_activos_cantones <- 'https://raw.githubusercontent.com/geoprocesamiento-2020i/datos/master/covid19/ms/07_02_CSV_ACTIVOS.csv'
+
+archivo_recuperados_cantones <- 'https://raw.githubusercontent.com/geoprocesamiento-2020i/datos/master/covid19/ms/07_02_CSV_RECUP.csv'
+
+archivo_fallecidos_cantones <- 'https://raw.githubusercontent.com/geoprocesamiento-2020i/datos/master/covid19/ms/07_02_CSV_FALLECIDOS.csv'
+
+
 
 #---------------------- Datos País ---------------------
 # Data frame de datos generales por país
@@ -77,8 +83,23 @@ df_general_pais_ultima_fecha <-
   filter(FECHA == max(FECHA, na.rm = TRUE))
 
 # Data frame de datos generales por país en la penúltima fecha
+df_general_pais_viejos <- 
+  df_general_pais[116,]
+
 # Data frame de datos generales por país en la última fecha
 
+# Objeto sf de cantones
+
+# Carga desde el servicio WFS del SNIT
+# url_base_wfs_ign_5mil <- "http://geos.snitcr.go.cr/be/IGN_5/wfs?"
+# solicitud_wfs_ign_5mil_cantones <- "request=GetFeature&service=WFS&version=2.0.0&typeName=IGN_5:limitecantonal_5k&outputFormat=application/json"
+# sf_cantones <-
+#   st_read(paste0(url_base_wfs_ign_5mil, solicitud_wfs_ign_5mil_cantones)) %>%
+#   st_simplify(dTolerance = 1000) %>%
+#   st_transform(4326)
+
+# Carga desde un archivo GeoJSON simplificado
+sf_cantones <- st_read('https://raw.githubusercontent.com/geoprocesamiento-2020i/datos/master/delimitacion-territorial-administrativa/cr/ign/cr_limite_cantonal_ign_wgs84.geojson')
 
 
 #---------------------- Datos Positivos ---------------------
@@ -95,13 +116,7 @@ df_positivos_cantones_ultima_fecha <-
   filter(fecha == max(fecha, na.rm = TRUE)) %>%
   select(cod_canton, positivos)
 
-# Objeto sf de cantones
-url_base_wfs_ign_5mil <- "http://geos.snitcr.go.cr/be/IGN_5/wfs?"
-solicitud_wfs_ign_5mil_cantones <- "request=GetFeature&service=WFS&version=2.0.0&typeName=IGN_5:limitecantonal_5k&outputFormat=application/json"
-sf_cantones <-
-  st_read(paste0(url_base_wfs_ign_5mil, solicitud_wfs_ign_5mil_cantones)) %>%
-  st_simplify(dTolerance = 1000) %>%
-  st_transform(4326)
+
 # Objeto sf de casos positivos en cantones en la última fecha
 sf_positivos_cantones_ultima_fecha <-
   left_join(sf_cantones, df_positivos_cantones_ultima_fecha, by = c('cod_canton')) %>%
@@ -115,69 +130,63 @@ df_activos_cantones <-
 df_activos_cantones_ancho %>%
 pivot_longer(cols = c(-cod_provin, -provincia, -cod_canton, -canton), names_to = "fecha", values_to = "activos")
 df_activos_cantones$fecha <- as.Date(df_activos_cantones$fecha, "X%d.%m.%Y")
+
 #Data frame de casos activos por cantón en la última fecha
 df_activos_cantones_ultima_fecha <- 
 df_activos_cantones %>%
 filter(fecha == max(fecha, na.rm = TRUE)) %>%
 select(cod_canton, activos)
-# Objeto sf de cantones
-url_base_wfs_ign_5mil <- "http://geos.snitcr.go.cr/be/IGN_5/wfs?"
-solicitud_wfs_ign_5mil_cantones <- "request=GetFeature&service=WFS&version=2.0.0&typeName=IGN_5:limitecantonal_5k&outputFormat=application/json"
-sf_cantones <-
- st_read(paste0(url_base_wfs_ign_5mil, solicitud_wfs_ign_5mil_cantones)) %>%
- st_simplify(dTolerance = 1000) %>%
- st_transform(4326)
+
+
 # Objeto sf de casos activos en cantones en la última fecha
 sf_activos_cantones_ultima_fecha <-
 left_join(sf_cantones, df_activos_cantones_ultima_fecha, by = c('cod_canton')) %>%
 arrange(desc(activos))
+
 #---------------------- Datos Recuperados ---------------------
+
 # Data frame de casos recuperados por cantón
 df_recuperados_cantones_ancho <- read.csv(archivo_recuperados_cantones, sep = caracter_separador)
 df_recuperados_cantones <-
   df_recuperados_cantones_ancho %>%
   pivot_longer(cols = c(-cod_provin, -provincia, -cod_canton, -canton), names_to = "fecha", values_to = "recuperados")
 df_recuperados_cantones$fecha <- as.Date(df_recuperados_cantones$fecha, "X%d.%m.%Y")
+
 # Data frame de casos recuperados por cantón en la última fecha
 df_recuperados_cantones_ultima_fecha <- 
   df_recuperados_cantones %>%
   filter(fecha == max(fecha, na.rm = TRUE)) %>%
   select(cod_canton, recuperados)
-# Objeto sf de cantones
-url_base_wfs_ign_5mil <- "http://geos.snitcr.go.cr/be/IGN_5/wfs?"
-solicitud_wfs_ign_5mil_cantones <- "request=GetFeature&service=WFS&version=2.0.0&typeName=IGN_5:limitecantonal_5k&outputFormat=application/json"
-sf_cantones <-
-  st_read(paste0(url_base_wfs_ign_5mil, solicitud_wfs_ign_5mil_cantones)) %>%
-  st_simplify(dTolerance = 1000) %>%
-  st_transform(4326)
+
+
 # Objeto sf de casos recuperados en cantones en la última fecha
 sf_recuperados_cantones_ultima_fecha <-
   left_join(sf_cantones, df_recuperados_cantones_ultima_fecha, by = c('cod_canton')) %>%
   arrange(desc(recuperados))
+
 #---------------------- Datos Fallecidos ---------------------
+
 # Data frame de casos fallecidos por cantón
 df_fallecidos_cantones_ancho <- read.csv(archivo_fallecidos_cantones, sep = caracter_separador)
 df_fallecidos_cantones <-
   df_fallecidos_cantones_ancho %>%
   pivot_longer(cols = c(-cod_provin, -provincia, -cod_canton, -canton), names_to = "fecha", values_to = "fallecidos")
 df_fallecidos_cantones$fecha <- as.Date(df_fallecidos_cantones$fecha, "X%d.%m.%Y")
+
 # Data frame de casos fallecidos por cantón en la última fecha
 df_fallecidos_cantones_ultima_fecha <- 
   df_fallecidos_cantones %>%
   filter(fecha == max(fecha, na.rm = TRUE)) %>%
   select(cod_canton, fallecidos)
-# Objeto sf de cantones
-url_base_wfs_ign_5mil <- "http://geos.snitcr.go.cr/be/IGN_5/wfs?"
-solicitud_wfs_ign_5mil_cantones <- "request=GetFeature&service=WFS&version=2.0.0&typeName=IGN_5:limitecantonal_5k&outputFormat=application/json"
-sf_cantones <-
-  st_read(paste0(url_base_wfs_ign_5mil, solicitud_wfs_ign_5mil_cantones)) %>%
-  st_simplify(dTolerance = 1000) %>%
-  st_transform(4326)
+
+
 # Objeto sf de casos fallecidos en cantones en la última fecha
 sf_fallecidos_cantones_ultima_fecha <-
   left_join(sf_cantones, df_fallecidos_cantones_ultima_fecha, by = c('cod_canton')) %>%
   arrange(desc(fallecidos))
 ```
+
+
 
 Resumen
 =======================================================================
@@ -191,7 +200,7 @@ Row
 
 ### Casos positivos {.value-box}
 ```{r}
-valueBox(value = paste(format(df_general_pais_ultima_fecha$positivos, big.mark = ","), "", sep = " "), 
+valueBox(value = paste(format(df_general_pais_ultima_fecha$positivos, big.mark = ","), "", sep = " ", ("(+270)")), 
          caption = "Total de casos positivos", 
          icon = icono_positivos, 
          color = color_positivos
@@ -236,7 +245,7 @@ Row
 
 ### Hospitalizados {.value-box}
 ```{r}
-valueBox(value = paste(format(df_general_pais_ultima_fecha$hospital, big.mark = ","), "", sep = " "), 
+valueBox(value = paste(format(df_general_pais_ultima_fecha$hospital, big.mark = ","), "", sep = " ",("(+10)")), 
          caption = "Total de hospitalizados", 
          icon = icono_hospitalizados,
          color = color_hospitalizados
@@ -298,7 +307,16 @@ plot_ly(data = df_general_pais,
 
 ### Tabla de cantidades de casos en cantones
 ```{r}
-st_drop_geometry(sf_positivos_cantones_ultima_fecha) %>% 
+
+df_general_cantones_ultima_fecha <- left_join(df_activos_cantones_ultima_fecha, df_positivos_cantones_ultima_fecha, by = c( "cod_canton"))
+df_general_cantones_ultima_fechas <- left_join(df_recuperados_cantones_ultima_fecha, df_fallecidos_cantones_ultima_fecha, by = c( "cod_canton"))
+df_general_cantones <- left_join(df_general_cantones_ultima_fecha, df_general_cantones_ultima_fechas)
+sf_general_cantones <- 
+  left_join(sf_cantones, df_general_cantones, by = c('cod_canton'))
+
+
+
+st_drop_geometry(sf_general_cantones) %>% 
   select(Provincia = provincia, Canton = canton, Positivos = positivos) %>%
   DT::datatable(rownames = FALSE,
                 options = list(searchHighlight = TRUE, 
@@ -319,7 +337,7 @@ Row
 
 ### Casos positivos {.value-box}
 ```{r}
-valueBox(value = paste(format(df_general_pais_ultima_fecha$positivos, big.mark = ","), "", sep = " "), 
+valueBox(value = paste(format(df_general_pais_ultima_fecha$positivos, big.mark = ","), "", sep = " ", ("(+270)")), 
          caption = "Total de casos positivos", 
          icon = icono_positivos, 
          color = color_positivos
@@ -462,7 +480,7 @@ Row
 
 ### Casos activos {.value-box}
 ```{r}
-valueBox(value = paste(format(df_general_pais_ultima_fecha$activos, big.mark = ","), "", sep = " "), 
+valueBox(value = paste(format(df_general_pais_ultima_fecha$activos, big.mark = ","), "", sep = " ", ("(+196)")), 
          caption = "Total de casos activos", 
          icon = icono_activos, 
          color = color_activos
@@ -606,7 +624,7 @@ Row
 
 ### Casos recuperados {.value-box}
 ```{r}
-valueBox(value = paste(format(df_general_pais_ultima_fecha$RECUPERADOS, big.mark = ","), "", sep = " "), 
+valueBox(value = paste(format(df_general_pais_ultima_fecha$RECUPERADOS, big.mark = ","), "", sep = " ", ("(+73)")), 
          caption = "Total de casos recuperados", 
          icon = icono_recuperados, 
          color = color_recuperados
@@ -748,7 +766,7 @@ Row
 
 ### Casos fallecidos {.value-box}
 ```{r}
-valueBox(value = paste(format(df_general_pais_ultima_fecha$fallecidos, big.mark = ","), "", sep = " "), 
+valueBox(value = paste(format(df_general_pais_ultima_fecha$fallecidos, big.mark = ","), "", sep = " ", ("(+1)")), 
          caption = "Total de casos fallecidos", 
          icon = icono_fallecidos, 
          color = color_fallecidos
