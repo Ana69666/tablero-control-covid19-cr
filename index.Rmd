@@ -25,7 +25,7 @@ library(leaflet)
 
 #-------------------- Colores ---------------------
 
-color_positivos <- 'blue'
+color_positivos <- '#006699'
 color_activos <- 'orange'
 color_recuperados <- 'green'
 color_fallecidos <- 'purple'
